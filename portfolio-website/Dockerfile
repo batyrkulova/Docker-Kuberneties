@@ -1,38 +1,17 @@
-# Stage - 1 
-# Install Dependencies
-FROM node:20-alpine AS deps
+FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
-# Create Node Modules folder
-RUN npm install 
+COPY . /app
 
-# Stage - 2
-# Build and Compile
-FROM node:20-alpine AS builder
-
-WORKDIR /app
-
-COPY --from=deps /app/node_modules ./node_modules
-
-COPY . .
+RUN npm install
 
 RUN npm run build
 
-# Stage - 3
-# Final Stage has everything that's needed for RUNTIME
-FROM node:20-alpine AS final
-
-WORKDIR /app
-
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=builder /app/.next ./next
-COPY --from=builder /app/public ./public 
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/next.config.js ./
+EXPOSE 3000
 
 RUN chown -R node:node /app
+
 USER node
-EXPOSE 3000
+
 CMD ["npm", "start"]
